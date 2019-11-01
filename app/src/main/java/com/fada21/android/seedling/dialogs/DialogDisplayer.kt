@@ -5,17 +5,18 @@ import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.ViewModelProviders
 
+private const val DEFAULT_DIALOG_TAG = "dialog_tag"
+
 class DialogDisplayer(
     private val fragmentManager: FragmentManager,
     private val dialogBlueprint: DialogBlueprint,
-    private val dialogTag: String = "dialog_tag",
+    private val dialogTag: String,
     private val onDialogEvent: (DialogEvent) -> Unit,
     private val onSingleItemSelected: (Int) -> Unit
 ) {
 
     init {
-        val dialogFragment = fragmentManager.findFragmentByTag(dialogTag)
-        dialogFragment?.let { observeDialog(it) }
+        fragmentManager.findFragmentByTag(dialogTag)?.let(this::observeDialog)
     }
 
     private fun observeDialog(fragment: Fragment) {
@@ -35,7 +36,7 @@ class DialogDisplayer(
 @JvmName("dialogDisplayerFrom")
 fun FragmentActivity.dialogDisplayer(
     dialogBlueprint: DialogBlueprint,
-    dialogTag: String = "dialog_tag",
+    dialogTag: String = DEFAULT_DIALOG_TAG,
     onDialogEvent: ((DialogEvent) -> Unit) = {},
     onSingleItemSelected: (Int) -> Unit = {}
 ): DialogDisplayer = DialogDisplayer(
@@ -49,7 +50,7 @@ fun FragmentActivity.dialogDisplayer(
 @JvmName("dialogDisplayerFrom")
 fun Fragment.dialogDisplayer(
     dialogBlueprint: DialogBlueprint,
-    dialogTag: String = "dialog_tag",
+    dialogTag: String = DEFAULT_DIALOG_TAG,
     onDialogEvent: ((DialogEvent) -> Unit) = {},
     onSingleItemSelected: (Int) -> Unit = {}
 ): DialogDisplayer = DialogDisplayer(
