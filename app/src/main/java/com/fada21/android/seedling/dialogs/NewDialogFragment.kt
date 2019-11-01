@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.DialogInterface
 import android.os.Bundle
 import android.widget.ListAdapter
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.ViewModelProviders
@@ -15,65 +14,56 @@ private const val dialogInfoKey = "dialog-info"
 
 class NewDialogFragment : DialogFragment() {
 
-    private val info: NewDialogInfo by lazy { arguments?.getSerializable(dialogInfoKey) as NewDialogInfo }
-    private var itemSelected: Int = -1
+    private val blueprint: DialogBlueprint by lazy { arguments?.getSerializable(dialogInfoKey) as DialogBlueprint }
 
-    val vm by lazy { ViewModelProviders.of(this)[DialogViewModel::class.java] }
+    private val vm by lazy { ViewModelProviders.of(this)[DialogViewModel::class.java] }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val builder = AlertDialog.Builder(requireContext())
-        info.run {
+        blueprint.run {
             title?.run(builder::setTitle)
             message?.run(builder::setMessage)
             positiveButton?.let {
-                builder.setPositiveButton(it) { dialog, which ->
-                    vm.onEvent(
-                        DialogEvent.Positive
-                    )
-                }
+                builder.setPositiveButton(it) { _, _ -> vm.onDialogEvent(DialogEvent.Positive) }
             }
             singleChoiceItemsList?.run {
                 builder.setSingleChoiceItems(
                     createListAdapter(builder.context),
                     initialSelection
                 ) { _, position ->
-                    Toast.makeText(
-                        builder.context,
-                        "position $position checked",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    itemSelected = position
+                    vm.onSingleItemSelected(position)
                     onItemSelected(position)
                 }
             }
         }
-        vm
-        return builder.create()
+
+        val alertDialog = builder.create()
+        alertDialog.setOnShowListener { vm.onDialogEvent(DialogEvent.Shown) }
+        return alertDialog
     }
 
     override fun onCancel(dialog: DialogInterface) {
+        vm.onDialogEvent(DialogEvent.Cancelled)
         super.onCancel(dialog)
-        vm.onEvent(DialogEvent.Cancelled)
     }
 
     override fun onDismiss(dialog: DialogInterface) {
+        vm.onDialogEvent(DialogEvent.Dismissed)
         super.onDismiss(dialog)
-        vm.onEvent(DialogEvent.Dismissed)
     }
-
 
     companion object {
 
-        operator fun invoke(dialogInfo: NewDialogInfo): NewDialogFragment {
+        operator fun invoke(dialogBlueprint: DialogBlueprint): NewDialogFragment {
             return NewDialogFragment().apply {
-                arguments = Bundle().apply { putSerializable(dialogInfoKey, dialogInfo) }
+                arguments = Bundle().apply { putSerializable(dialogInfoKey, dialogBlueprint) }
             }
         }
     }
 
 }
 
-data class NewDialogInfo(
+data class DialogBlueprint(
     val title: String? = null,
     val message: String? = null, // mutually exclusive with singleChoiceItemsList
     val positiveButton: String? = null,

@@ -5,7 +5,7 @@ import android.widget.ArrayAdapter
 import android.widget.ListAdapter
 import com.fada21.android.seedling.dialogs.SingleChoiceItemsList
 
-class TestSingleChoiceItemsList() : SingleChoiceItemsList {
+class TestSingleChoiceItemsList : SingleChoiceItemsList {
     override fun createListAdapter(context: Context): ListAdapter =
         ArrayAdapter<String>(
             context,
