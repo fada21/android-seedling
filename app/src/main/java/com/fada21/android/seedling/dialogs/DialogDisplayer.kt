@@ -10,23 +10,21 @@ private const val DEFAULT_DIALOG_TAG = "dialog_tag"
 class DialogDisplayer(
     private val fragmentManager: FragmentManager,
     private val dialogBlueprint: DialogBlueprint,
-    private val dialogTag: String,
-    private val onDialogEvent: (DialogEvent) -> Unit,
-    private val onSingleItemSelected: (Int) -> Unit
+    private val dialogTag: String = DEFAULT_DIALOG_TAG,
+    private val onDialogEvent: ((DialogEvent) -> Unit)? = null
 ) {
 
-    init {
-        fragmentManager.findFragmentByTag(dialogTag)?.let(this::observeDialog)
-    }
+    fun observe() = fragmentManager.findFragmentByTag(dialogTag)?.let(this::observeDialog)
 
     private fun observeDialog(fragment: Fragment) {
-        val vm = ViewModelProviders.of(fragment)[DialogViewModel::class.java]
-        vm.onDialogEvent = onDialogEvent
-        vm.onSingleItemSelected = onSingleItemSelected
+        if (onDialogEvent != null) {
+            val vm = ViewModelProviders.of(fragment)[DialogViewModel::class.java]
+            vm.onDialogEvent = onDialogEvent
+        }
     }
 
     fun display() {
-        val dialogFragment = NewDialogFragment(dialogBlueprint)
+        val dialogFragment = ReattachingDialogFragment(dialogBlueprint)
         dialogFragment.showNow(fragmentManager, dialogTag)
         observeDialog(dialogFragment)
     }
@@ -37,26 +35,22 @@ class DialogDisplayer(
 fun FragmentActivity.dialogDisplayer(
     dialogBlueprint: DialogBlueprint,
     dialogTag: String = DEFAULT_DIALOG_TAG,
-    onDialogEvent: ((DialogEvent) -> Unit) = {},
-    onSingleItemSelected: (Int) -> Unit = {}
+    onDialogEvent: ((DialogEvent) -> Unit) = {}
 ): DialogDisplayer = DialogDisplayer(
     fragmentManager = supportFragmentManager,
     dialogBlueprint = dialogBlueprint,
     dialogTag = dialogTag,
-    onDialogEvent = onDialogEvent,
-    onSingleItemSelected = onSingleItemSelected
+    onDialogEvent = onDialogEvent
 )
 
 @JvmName("dialogDisplayerFrom")
 fun Fragment.dialogDisplayer(
     dialogBlueprint: DialogBlueprint,
     dialogTag: String = DEFAULT_DIALOG_TAG,
-    onDialogEvent: ((DialogEvent) -> Unit) = {},
-    onSingleItemSelected: (Int) -> Unit = {}
+    onDialogEvent: ((DialogEvent) -> Unit) = {}
 ): DialogDisplayer = DialogDisplayer(
     fragmentManager = childFragmentManager,
     dialogBlueprint = dialogBlueprint,
     dialogTag = dialogTag,
-    onDialogEvent = onDialogEvent,
-    onSingleItemSelected = onSingleItemSelected
+    onDialogEvent = onDialogEvent
 )

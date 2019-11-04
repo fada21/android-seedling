@@ -6,7 +6,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import com.fada21.android.seedling.dialogs.Content
 import com.fada21.android.seedling.dialogs.DialogBlueprint
+import com.fada21.android.seedling.dialogs.Text
 import com.fada21.android.seedling.dialogs.dialogDisplayer
 import kotlinx.android.synthetic.main.main.*
 
@@ -20,18 +22,16 @@ class MainFragment : Fragment() {
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        dialog_button.setOnClickListener {
-            val newDialogInfo = DialogBlueprint(
-                title = "test title",
-                positiveButton = "OK",
-                singleChoiceItemsList = TestSingleChoiceItemsList()
-            )
-            dialogDisplayer(
-                dialogBlueprint = newDialogInfo,
-                onDialogEvent = { Log.d("Dialogs", "$it") },
-                onSingleItemSelected = { Log.d("Dialogs", "position $it selected") }
-            ).display()
-        }
+        val dialogBlueprint = DialogBlueprint(
+            title = Text.FromCharSequence("test title"),
+            positiveButton = Text.FromCharSequence("OK"),
+            content = Content.SingleChoice(TestSingleChoiceItemsList())
+        )
+        val dialogDisplayer = dialogDisplayer(
+            dialogBlueprint = dialogBlueprint,
+            onDialogEvent = { Log.d("Dialogs", "$it") })
+        dialogDisplayer.observe()
+        dialog_button.setOnClickListener { dialogDisplayer.display() }
     }
 
 }
