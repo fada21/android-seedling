@@ -29,7 +29,6 @@ class ReattachingDialogFragment : DialogFragment() {
             when (content) {
                 is Content.Message -> content.text.toCharSequence(context)?.run(builder::setMessage)
                 is Content.SingleChoice -> setSingleChoice(content, builder)
-                Content.None -> Unit
             }
 
         }

@@ -5,8 +5,8 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.fada21.android.seedling.dialogs.Content
 import com.fada21.android.seedling.dialogs.DialogBlueprint
+import com.fada21.android.seedling.dialogs.DialogDisplayer.Companion.dialogDisplayer
 import com.fada21.android.seedling.dialogs.Text
-import com.fada21.android.seedling.dialogs.dialogDisplayer
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
@@ -19,10 +19,11 @@ class MainActivity : AppCompatActivity() {
             positiveButton = Text.FromCharSequence("OK"),
             content = Content.SingleChoice(TestSingleChoiceItemsList())
         )
-        val dialogDisplayer = dialogDisplayer(
-            dialogBlueprint = dialogBlueprint,
-            onDialogEvent = { Log.d("Dialogs", "$it") })
-        dialogDisplayer.observe()
+        val dialogDisplayer = dialogDisplayer(dialogBlueprint, dialogTag = "activity_dialog") {
+            main_text.text = it.toString()
+            Log.d("Dialogs", "$it")
+        }
+        dialogDisplayer.attach()
         dialog_button.setOnClickListener { dialogDisplayer.display() }
     }
 
