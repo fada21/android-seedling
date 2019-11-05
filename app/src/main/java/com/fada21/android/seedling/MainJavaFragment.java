@@ -15,8 +15,8 @@ import androidx.fragment.app.Fragment;
 import com.fada21.android.seedling.dialogs.DialogBlueprint;
 import com.fada21.android.seedling.dialogs.DialogDisplayer;
 
-import static com.fada21.android.seedling.dialogs.DialogBlueprintBuilder.dialogBlueprintBuilderOf;
-import static com.fada21.android.seedling.dialogs.DialogDisplayerBuilder.dialogDisplayerBuilderFrom;
+import static com.fada21.android.seedling.dialogs.DialogBlueprintBuilder.dialogBlueprintBuilderFor;
+import static com.fada21.android.seedling.dialogs.DialogDisplayer.dialogDisplayerFrom;
 
 public class MainJavaFragment extends Fragment {
 
@@ -40,20 +40,17 @@ public class MainJavaFragment extends Fragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        DialogBlueprint dialogBlueprint = dialogBlueprintBuilderOf(new TestSingleChoiceItemsList())
+        DialogBlueprint dialogBlueprint = dialogBlueprintBuilderFor(new TestSingleChoiceItemsList())
                 .setPositiveButton("OK")
                 .setTitle("test title")
                 .build();
 
-        DialogDisplayer dialogDisplayer = dialogDisplayerBuilderFrom(this)
-                .setDialogTag("java_fragment_dialog")
-                .setOnDialogEventAction(dialogEvent -> {
-                    Log.d("Dialogs", dialogEvent.toString());
-                    textView.setText("Last event: " + dialogEvent);
-                })
-                .buildWith(dialogBlueprint);
+        DialogDisplayer dialogDisplayer = dialogDisplayerFrom(this, dialogBlueprint, "java_fragment_dialog");
 
-        dialogDisplayer.attach();
+        dialogDisplayer.observe(dialogEvent -> {
+            Log.d("Dialogs", dialogEvent.toString());
+            textView.setText("Last event: " + dialogEvent);
+        });
         dialogButton.setOnClickListener(v -> dialogDisplayer.display());
     }
 

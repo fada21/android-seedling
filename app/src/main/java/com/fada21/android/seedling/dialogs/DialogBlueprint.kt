@@ -20,7 +20,7 @@ data class DialogBlueprint(
     }
 }
 
-sealed class Text {
+sealed class Text : Serializable {
     data class FromCharSequence(val text: CharSequence) : Text()
     data class FromResource(@StringRes val stringRes: Int) : Text()
     internal object None : Text()
@@ -30,17 +30,29 @@ sealed class Text {
         is FromResource -> context.getString(stringRes)
         None -> null
     }
+
+    companion object {
+        private const val serialVersionUID: Long = 201911041556
+    }
 }
 
-sealed class Content {
+sealed class Content : Serializable {
     data class Message(val text: Text) : Content()
     data class SingleChoice(val list: SingleChoiceItemsList) : Content()
+
+    companion object {
+        private const val serialVersionUID: Long = 201911041556
+    }
 }
 
-interface SingleChoiceItemsList {
+interface SingleChoiceItemsList : Serializable {
     fun createListAdapter(context: Context): ListAdapter
     val initialSelection: Int
     fun onItemSelected(position: Int)
+
+    companion object {
+        private const val serialVersionUID: Long = 201911041556
+    }
 }
 
 
@@ -86,17 +98,17 @@ class DialogBlueprintBuilder(private var content: Content) {
     companion object {
 
         @JvmStatic
-        fun dialogBlueprintBuilderOf(list: SingleChoiceItemsList) =
+        fun dialogBlueprintBuilderFor(list: SingleChoiceItemsList) =
             DialogBlueprintBuilder(SingleChoice(list))
 
 
         @JvmStatic
-        fun dialogBlueprintBuilderOf(@StringRes messageStringRes: Int) =
+        fun dialogBlueprintBuilderFor(@StringRes messageStringRes: Int) =
             DialogBlueprintBuilder(Message(FromResource(messageStringRes)))
 
 
         @JvmStatic
-        fun dialogBlueprintBuilderOf(message: CharSequence) =
+        fun dialogBlueprintBuilderFor(message: CharSequence) =
             DialogBlueprintBuilder(Message(FromCharSequence(message)))
     }
 

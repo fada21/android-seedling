@@ -10,95 +10,70 @@ private const val DEFAULT_DIALOG_TAG = "dialog_tag"
 class DialogDisplayer(
     private val fragmentManager: FragmentManager,
     private val dialogBlueprint: DialogBlueprint,
-    private val dialogTag: String = DEFAULT_DIALOG_TAG,
-    private val onDialogEvent: ((DialogEvent) -> Unit)? = null
+    private val dialogTag: String = DEFAULT_DIALOG_TAG
 ) {
 
-    /**
-     * If dialog events are relevant then invoke this method i.e. in onCreate() to make sure dialogs always gets reattached
-     *
-     * Detach is not needed as viewmodel will go away with dialog fragment
-     */
-    fun attach() = fragmentManager.findFragmentByTag(dialogTag)?.let(this::observeDialog)
+    private var dialogEventListener: ((DialogEvent) -> Unit)? = null
 
-    private fun observeDialog(fragment: Fragment) {
-        if (onDialogEvent != null) {
-            val vm = ViewModelProviders.of(fragment)[DialogViewModel::class.java]
-            vm.onDialogEvent = onDialogEvent
+    fun observe(onDialogEvent: (DialogEvent) -> Unit) {
+        dialogEventListener = onDialogEvent
+        fragmentManager.findFragmentByTag(dialogTag)?.let { fragment ->
+            observeDialog(fragment, onDialogEvent)
         }
     }
 
+    fun observe(onDialogEvent: DialogEventListener) {
+        dialogEventListener = onDialogEvent::onDialogEvent
+        fragmentManager.findFragmentByTag(dialogTag)?.let { fragment ->
+            observeDialog(fragment, onDialogEvent::onDialogEvent)
+        }
+    }
+
+    private fun observeDialog(fragment: Fragment, onDialogEvent: (DialogEvent) -> Unit) {
+        val vm = ViewModelProviders.of(fragment)[DialogViewModel::class.java]
+        vm.onDialogEvent = onDialogEvent
+    }
+
     fun display() {
-        val dialogFragment = ReattachingDialogFragment(dialogBlueprint)
-        dialogFragment.showNow(fragmentManager, dialogTag)
-        observeDialog(dialogFragment)
+        val onDialogEvent = dialogEventListener
+        if (onDialogEvent == null) {
+            SimpleDialogFragment(dialogBlueprint).showNow(fragmentManager, dialogTag)
+        } else {
+            val dialogFragment = ObservableDialogFragment(dialogBlueprint)
+            dialogFragment.showNow(fragmentManager, dialogTag)
+            observeDialog(dialogFragment, onDialogEvent)
+        }
     }
 
     companion object {
 
+        @JvmStatic
+        @JvmOverloads
+        @JvmName("dialogDisplayerFrom")
         fun FragmentActivity.dialogDisplayer(
             dialogBlueprint: DialogBlueprint,
-            dialogTag: String = DEFAULT_DIALOG_TAG,
-            onDialogEvent: ((DialogEvent) -> Unit)? = null
+            dialogTag: String = DEFAULT_DIALOG_TAG
         ): DialogDisplayer = DialogDisplayer(
             fragmentManager = supportFragmentManager,
             dialogBlueprint = dialogBlueprint,
-            dialogTag = dialogTag,
-            onDialogEvent = onDialogEvent
+            dialogTag = dialogTag
         )
 
+        @JvmStatic
+        @JvmOverloads
+        @JvmName("dialogDisplayerFrom")
         fun Fragment.dialogDisplayer(
             dialogBlueprint: DialogBlueprint,
-            dialogTag: String = DEFAULT_DIALOG_TAG,
-            onDialogEvent: ((DialogEvent) -> Unit)? = null
+            dialogTag: String = DEFAULT_DIALOG_TAG
         ): DialogDisplayer = DialogDisplayer(
             fragmentManager = childFragmentManager,
             dialogBlueprint = dialogBlueprint,
-            dialogTag = dialogTag,
-            onDialogEvent = onDialogEvent
+            dialogTag = dialogTag
         )
 
     }
 
-}
-
-/**
- * Java compatibility utils
- */
-class DialogDisplayerBuilder private constructor(private val fragmentManager: FragmentManager) {
-
-    private var _dialogTag = DEFAULT_DIALOG_TAG
-    fun setDialogTag(dialogTag: String): DialogDisplayerBuilder = apply {
-        _dialogTag = dialogTag
-    }
-
-    private var _onDialogEvent: ((DialogEvent) -> Unit)? = null
-    fun setOnDialogEventAction(onDialogEvent: DialogEventAction) = apply {
-        _onDialogEvent = onDialogEvent::onDialogEvent
-    }
-
-    fun buildWith(dialogBlueprint: DialogBlueprint): DialogDisplayer {
-        return DialogDisplayer(
-            fragmentManager = fragmentManager,
-            dialogBlueprint = dialogBlueprint,
-            dialogTag = _dialogTag,
-            onDialogEvent = _onDialogEvent
-        )
-    }
-
-    companion object {
-
-        @JvmStatic
-        fun dialogDisplayerBuilderFrom(activity: FragmentActivity): DialogDisplayerBuilder =
-            DialogDisplayerBuilder(activity.supportFragmentManager)
-
-        @JvmStatic
-        fun dialogDisplayerBuilderFrom(fragment: Fragment): DialogDisplayerBuilder =
-            DialogDisplayerBuilder(fragment.childFragmentManager)
-
-    }
-
-    interface DialogEventAction {
+    interface DialogEventListener {
         fun onDialogEvent(dialogEvent: DialogEvent)
     }
 

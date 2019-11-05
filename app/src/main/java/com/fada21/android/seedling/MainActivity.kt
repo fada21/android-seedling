@@ -19,11 +19,11 @@ class MainActivity : AppCompatActivity() {
             positiveButton = Text.FromCharSequence("OK"),
             content = Content.SingleChoice(TestSingleChoiceItemsList())
         )
-        val dialogDisplayer = dialogDisplayer(dialogBlueprint, dialogTag = "activity_dialog") {
+        val dialogDisplayer = dialogDisplayer(dialogBlueprint, dialogTag = "activity_dialog")
+        dialogDisplayer.observe {
             main_text.text = it.toString()
             Log.d("Dialogs", "$it")
         }
-        dialogDisplayer.attach()
         dialog_button.setOnClickListener { dialogDisplayer.display() }
     }
 
