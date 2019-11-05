@@ -13,12 +13,7 @@ data class DialogBlueprint(
     val positiveButton: Text = None,
     val negativeButton: Text = None,
     val title: Text = None
-) : Serializable {
-
-    companion object {
-        private const val serialVersionUID: Long = 201911041556
-    }
-}
+) : Serializable
 
 sealed class Text : Serializable {
     data class FromCharSequence(val text: CharSequence) : Text()
@@ -30,29 +25,17 @@ sealed class Text : Serializable {
         is FromResource -> context.getString(stringRes)
         None -> null
     }
-
-    companion object {
-        private const val serialVersionUID: Long = 201911041556
-    }
 }
 
 sealed class Content : Serializable {
     data class Message(val text: Text) : Content()
     data class SingleChoice(val list: SingleChoiceItemsList) : Content()
-
-    companion object {
-        private const val serialVersionUID: Long = 201911041556
-    }
 }
 
 interface SingleChoiceItemsList : Serializable {
     fun createListAdapter(context: Context): ListAdapter
     val initialSelection: Int
     fun onItemSelected(position: Int)
-
-    companion object {
-        private const val serialVersionUID: Long = 201911041556
-    }
 }
 
 

@@ -22,6 +22,9 @@ class DialogDisplayer(
         }
     }
 
+    /**
+     * Java convenience
+     */
     fun observe(onDialogEvent: DialogEventListener) {
         dialogEventListener = onDialogEvent::onDialogEvent
         fragmentManager.findFragmentByTag(dialogTag)?.let { fragment ->
