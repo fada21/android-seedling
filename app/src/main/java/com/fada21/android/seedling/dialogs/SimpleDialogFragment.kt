@@ -4,20 +4,24 @@ import android.app.Dialog
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.DialogFragment
-
-private const val dialogInfoKey = "dialog-info"
+import androidx.lifecycle.ViewModelProviders
 
 /**
  * Don't use this class directly. Show dialogs via DialogDisplayer
  */
 open class SimpleDialogFragment : DialogFragment() {
 
-    private val blueprint: DialogBlueprint by lazy { arguments?.getSerializable(dialogInfoKey) as DialogBlueprint }
+    protected val vm by lazy { ViewModelProviders.of(this)[DialogViewModel::class.java] }
+
+    protected var initialBlueprint: DialogBlueprint? = null
+    private val blueprint: DialogBlueprint? by lazy {
+        initialBlueprint?.also { vm.dialogBlueprint = it } ?: vm.dialogBlueprint
+    }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val context = requireContext()
         val builder = AlertDialog.Builder(context)
-        blueprint.run {
+        blueprint?.run {
             title.toCharSequence(context)?.run(builder::setTitle)
             positiveButton.toCharSequence(context)?.let { text ->
                 builder.setPositiveButton(text) { _, _ -> onDialogEvent(DialogEvent.Positive) }
@@ -29,11 +33,10 @@ open class SimpleDialogFragment : DialogFragment() {
                 is Content.Message -> content.text.toCharSequence(context)?.run(builder::setMessage)
                 is Content.SingleChoice -> setSingleChoice(content, builder)
             }
-
-        }
+        } ?: dismissAllowingStateLoss()
 
         val alertDialog = builder.create()
-        alertDialog.setOnShowListener { onDialogEvent(DialogEvent.Shown) }
+        if (blueprint != null) alertDialog.setOnShowListener { onDialogEvent(DialogEvent.Shown) }
         return alertDialog
     }
 
@@ -50,10 +53,6 @@ open class SimpleDialogFragment : DialogFragment() {
         }
     }
 
-    protected fun with(dialogBlueprint: DialogBlueprint) {
-        arguments = Bundle().apply { putSerializable(dialogInfoKey, dialogBlueprint) }
-    }
-
     protected open fun onDialogEvent(event: DialogEvent) {
         // no op
     }
@@ -62,7 +61,7 @@ open class SimpleDialogFragment : DialogFragment() {
 
         operator fun invoke(dialogBlueprint: DialogBlueprint): SimpleDialogFragment {
             return SimpleDialogFragment().apply {
-                with(dialogBlueprint)
+                initialBlueprint = dialogBlueprint
             }
         }
     }

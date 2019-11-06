@@ -2,7 +2,10 @@ package com.fada21.android.seedling.dialogs
 
 import androidx.lifecycle.ViewModel
 
-class DialogViewModel(var onDialogEvent: (DialogEvent) -> Unit = {}) : ViewModel()
+class DialogViewModel : ViewModel() {
+    var dialogBlueprint: DialogBlueprint? = null
+    var onDialogEvent: (DialogEvent) -> Unit = {}
+}
 
 sealed class DialogEvent {
     object Shown : DialogEvent()
